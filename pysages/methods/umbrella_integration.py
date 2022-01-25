@@ -9,7 +9,40 @@ from pysages.methods.harmonic_bias import HarmonicBias
 from pysages.methods.utils import HistogramLogger
 
 import jax.numpy as np
+from mpi4py.futures import MPIPoolExecutor
 
+def free_energy_gradient(K, mean, center):
+    "Equation 13 from https://doi.org/10.1063/1.3175798"
+    return -(K @ (mean - center))
+
+def integrate(A, nabla_A, centers, i):
+    return A[i-1] + nabla_A[i-1].T @ (centers[i] - centers[i-1])
+
+def collect(arg, Nreplica, name, dtype):
+    if isinstance(arg, list):
+        n = len(arg)
+        if n != Nreplica:
+            raise RuntimeError(f"Provided list argument {name} has not the correct length (got {n}, expected {Nreplica})")
+    else:
+        arg = [dtype(arg) for i in range(Nreplica)]
+    return arg
+
+def run_umbrella_sampling(sampler_args, context_generator, context_args, center, kspring, hist_period, hist_offset, timesteps):
+    sampler = UmbrellaIntegration(**sampler_args)
+    sampler.center = center
+    sampler.kspring = kspring
+    callback = HistogramLogger(hist_period, hist_offset)
+
+    context = context_generator(**context_args)
+    wrapped_context = ContextWrapper(context, sampler, callback)
+
+    with wrapped_context:
+        wrapped_context.run(timesteps)
+
+    mean = callback.get_means()
+    nabla_A = free_energy_gradient(sampler.kspring, mean, center)
+
+    return dict(kspring=kspring, center=center, histogram=callback, histogram_means=mean, nabla_A=nabla_A)
 
 class UmbrellaIntegration(HarmonicBias):
     def __init__(self, cvs, *args, **kwargs):
@@ -64,22 +97,6 @@ class UmbrellaIntegration(HarmonicBias):
             This method does not accepts a user defined callback are not available.
         """
 
-        def free_energy_gradient(K, mean, center):
-            "Equation 13 from https://doi.org/10.1063/1.3175798"
-            return -(K @ (mean - center))
-
-        def integrate(A, nabla_A, centers, i):
-            return A[i-1] + nabla_A[i-1].T @ (centers[i] - centers[i-1])
-
-        def collect(arg, Nreplica, name, dtype):
-            if isinstance(arg, list):
-                n = len(arg)
-                if n != Nreplica:
-                    raise RuntimeError(f"Provided list argument {name} has not the correct length (got {n}, expected {Nreplica})")
-            else:
-                arg = [dtype(arg) for i in range(Nreplica)]
-            return arg
-
         Nreplica = len(centers)
         timesteps = collect(timesteps, Nreplica, "timesteps", int)
         ksprings = collect(ksprings, Nreplica, "kspring", float)
@@ -94,32 +111,26 @@ class UmbrellaIntegration(HarmonicBias):
         result["nabla_A"] =  []
         result["A"] = []
 
-        self.context = []
+        futures = []
+        with MPIPoolExecutor() as executor:
+            for rep in range(Nreplica):
+                context_args["replica_num"] = rep
+                sampler_args = dict(cvs=self.cvs)
+                futures.append(executor.submit(run_umbrella_sampling, sampler_args, context_generator, context_args, centers[rep], ksprings[rep], hist_periods[rep], hist_offsets[rep], timesteps[rep])) 
+            for future in futures: 
+                for key,val in future.result().items():
+                    result[key].append(val)
 
-        for rep in range(Nreplica):
-            self.center = centers[rep]
-            self.kspring = ksprings[rep]
+        # for rep in range(Nreplica):
+            # context_args["replica_num"] = rep
 
-            context_args["replica_num"] = rep
-            context = context_generator(**context_args)
-            callback = HistogramLogger(hist_periods[rep], hist_offsets[rep])
-            wrapped_context = ContextWrapper(context, self, callback)
-            self.context.append(wrapped_context)
+            # results_single = run_umbrella_sampling(self, context_generator, context_args, centers[rep], ksprings[rep], hist_periods[rep], hist_offsets[rep], timesteps[rep])
+            # for key,val in results_single.items():
+                # result[key].append(val)
 
-            with wrapped_context:
-                wrapped_context.run(timesteps[rep])
-
-            mean = callback.get_means()
-
-            result["kspring"].append(self.kspring)
-            result["center"].append(self.center)
-            result["histogram"].append(callback)
-            result["histogram_means"].append(mean)
-            result["nabla_A"].append(free_energy_gradient(self.kspring, mean, self.center))
-            # Discrete forward integration of the free-energy
-            if rep == 0:
-                result["A"].append(0)
-            else:
-                result["A"].append(integrate(result["A"], result["nabla_A"], result["center"], rep))
+        # Discrete forward integration of the free-energy
+        result["A"].append(0)
+        for i in range(1,Nreplica):
+            result["A"].append(integrate(result["A"], result["nabla_A"][:i+1], result['center'][:i+1], i))
 
         return result
