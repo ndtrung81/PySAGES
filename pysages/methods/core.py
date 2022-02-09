@@ -8,6 +8,7 @@ from operator import or_
 from typing import Callable, Mapping
 
 from jax import jit
+from plum import dispatch
 
 from pysages.backends import ContextWrapper
 from pysages.collective_variables.core import build
@@ -22,7 +23,9 @@ class SamplingMethod(ABC):
     """
     Abstract base class for all sampling methods.
 
-    Defines the constructor that expects the collective variables, the build method to initialize the GPU execution for the biasing and the run method that executes the simulation run. All these are intended be enhanced/overwritten by inheriting classes.
+    Defines the constructor that expects the collective variables, the build method to
+    initialize the execution for the biasing and the run method that executes the
+    simulation run. All these are intended be enhanced/overwritten by inheriting classes.
     """
     snapshot_flags = set()
 
@@ -45,32 +48,42 @@ class SamplingMethod(ABC):
         """
         pass
 
-    def run(
-        self, context_generator: Callable, timesteps: int, callback: Callable = None,
-        context_args: Mapping = dict(), **kwargs
-    ):
-        """
-        Base implementation of running a single simulation/replica with a sampling method.
 
-        Arguments
-        ---------
-        context_generator: Callable
-            User defined function that sets up a simulation context with the backend.
-            Must return an instance of `hoomd.context.SimulationContext` for HOOMD-blue
-            and `openmm.Simulation` for OpenMM. The function gets `context_args`
-            unpacked for additional user arguments.
+@dispatch
+def run(
+    method: SamplingMethod, context_generator: Callable, timesteps: int,
+    callback: Callable = None, context_args: Mapping = dict(), **kwargs
+):
+    """
+    Base implementation for running a single simulation/replica with a sampling method.
 
-        timesteps: int
-            Number of timesteps the simulation is running.
+    Arguments
+    ---------
+    method: SamplingMethod
 
-        callback: Optional[Callable]
-            Allows for user defined actions into the simulation workflow of the method.
-            `kwargs` gets passed to the backend `run` function.
-        """
-        context = context_generator(**context_args)
-        self.context = ContextWrapper(context, self, callback)
-        with self.context:
-            self.context.run(timesteps, **kwargs)
+    context_generator: Callable
+        User defined function that sets up a simulation context with the backend.
+        Must return an instance of `hoomd.context.SimulationContext` for HOOMD-blue
+        and `openmm.Simulation` for OpenMM. The function gets `context_args`
+        unpacked for additional user arguments.
+
+    timesteps: int
+        Number of timesteps the simulation is running.
+
+    callback: Optional[Callable]
+        Allows for user defined actions into the simulation workflow of the method.
+        `kwargs` gets passed to the backend `run` function.
+
+    Note to developers: `method` must be pickle-able object, so make sure to implement
+    appropriate `__getstate__` and `__setstate__` attributes.
+    """
+    # Make sure the sampling methods a pickle-able
+    assert hasattr(method, "__getstate__") and hasattr(method, "__setstate__")
+
+    context = context_generator(**context_args)
+    wrapped_context = ContextWrapper(context, method, callback)
+    with wrapped_context:
+        wrapped_context.run(timesteps, **kwargs)
 
 
 class GriddedSamplingMethod(SamplingMethod):

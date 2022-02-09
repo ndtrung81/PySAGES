@@ -87,6 +87,9 @@ class ABF(GriddedSamplingMethod):
         super().__init__(cvs, grid, *args, **kwargs)
         self.N = np.asarray(self.kwargs.get('N', 200))
 
+    def __getstate__(self):
+        state = {}
+
     def build(self, snapshot, helpers, *args, **kwargs):
         """
         Build the functions for the execution of ABF
