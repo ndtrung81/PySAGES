@@ -1,22 +1,18 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2020-2021: PySAGES contributors
 # See LICENSE.md and CONTRIBUTORS.md at https://github.com/SSAGESLabs/PySAGES
-
+"""
+Abstract base classes for collective variables.
+"""
 from abc import ABC, abstractproperty
 from inspect import signature
 from typing import Callable, List, Tuple, Union
 
 from jax import grad, jit
+import jax.numpy as np
 from plum import dispatch
 
 from pysages.utils import JaxArray
-
-import jax.numpy as np
-
-
-# ================ #
-#   Base Classes   #
-# ================ #
 
 UInt32 = np.uint32
 Indices = Union[int, range]
@@ -33,17 +29,16 @@ class CollectiveVariable(ABC):
 
     Methods
     -------
-    __init__ : When defining an new collective variable, override this method
-        if you need to enforce any invariant over the indices. It can
-        otherwise be ommited.
+    __init__ :
 
-    Properties
-    ----------
-    function : Returns an external method that implements the actual
-        computation of the collective variable.
     """
 
-    def __init__(self, indices, n = None):
+    def __init__(self, indices, n=None):
+        """
+        When defining an new collective variable, override this method
+        if you need to enforce any invariant over the indices. It can
+        otherwise be ommited.
+        """
         indices, groups = process_groups(indices)
 
         if n is not None:
@@ -55,7 +50,9 @@ class CollectiveVariable(ABC):
 
     @abstractproperty
     def function(self):
-        pass
+        """
+        Returns an external method that implements the actual computation of the collective variable.
+        """
 
 
 # NOTE: `IndexedCV` might be a better name for this
