@@ -106,7 +106,7 @@ class UmbrellaIntegration(HarmonicBias):
         hist_periods = collect(hist_periods, n_replica, "hist_periods", int)
         hist_offsets = collect(hist_offsets, n_replica, "hist_offsets", int)
 
-        result = {}
+        result = dict()
         result["histogram"] = []
         result["histogram_means"] = []
         result["kspring"] = []
