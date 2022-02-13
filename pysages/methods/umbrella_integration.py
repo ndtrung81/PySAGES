@@ -98,7 +98,7 @@ class UmbrellaIntegration(HarmonicBias):
             return arg
 
         if context_args is None:
-            context_args = dict()
+            context_args = {}
 
         n_replica = len(centers)
         timesteps = collect(timesteps, n_replica, "timesteps", int)
@@ -106,7 +106,7 @@ class UmbrellaIntegration(HarmonicBias):
         hist_periods = collect(hist_periods, n_replica, "hist_periods", int)
         hist_offsets = collect(hist_offsets, n_replica, "hist_offsets", int)
 
-        result = dict()
+        result = {}
         result["histogram"] = []
         result["histogram_means"] = []
         result["kspring"] = []
