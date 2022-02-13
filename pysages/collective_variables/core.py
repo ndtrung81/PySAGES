@@ -20,24 +20,21 @@ Indices = Union[int, range]
 
 class CollectiveVariable(ABC):
     """Abstract base class for defining collective variables
+
+        Parameters
+    ----------
+    indices : list[int], list[tuple(int)]
+       Must be a list or tuple of atoms (ints or ranges) or groups of
+       atoms. A group is specified as a nested list or tuple of atoms.
+    group_length: int, optional
+       Specify if a fixed group length is expected.
+
+    When defining an new collective variable, override this method
+    if you need to enforce any invariant over the indices. It can
+    otherwise be ommited.
     """
 
     def __init__(self, indices, group_length=None):
-        """
-        Constructor
-
-        Parameters
-        ----------
-        indices : list[int], list[tuple(int)]
-           Must be a list or tuple of atoms (ints or ranges) or groups of
-           atoms. A group is specified as a nested list or tuple of atoms.
-        group_length: int, optional
-           Specify if a fixed group length is expected.
-
-        When defining an new collective variable, override this method
-        if you need to enforce any invariant over the indices. It can
-        otherwise be ommited.
-        """
         indices, groups = process_groups(indices)
 
         if group_length is not None:
