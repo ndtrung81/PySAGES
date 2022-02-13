@@ -1,5 +1,5 @@
-pysages.collective_variables.angles
------------------------------------
+Abstract Collective Variables
+-----------------------------
 
 .. rubric:: Overview
 

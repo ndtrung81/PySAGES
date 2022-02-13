@@ -3,6 +3,7 @@
 # See LICENSE.md and CONTRIBUTORS.md at https://github.com/SSAGESLabs/PySAGES
 """
 Collective variable angles describe the angle spanning by 3 (or 4 for dihedral) particles in the simulation.
+
 It is common to describe such anlges inside a molecule or protein characteristic for a conformation change.
 """
 
@@ -12,25 +13,28 @@ from .core import ThreePointCV, FourPointCV
 
 
 class Angle(ThreePointCV):
-    """
+    """Angle between 3 points in space.
+
     Angle collective variables calcualte the angle spanned by three points in space (usualy atom positions).
     Take a look at the `pysages.collective_variables.core.ThreePointCV` for details on the constructor.
     """
     @property
     def function(self):
         """
-        Returns the function that calculate the angle value from a simlation snap shot.
+        Function generator
+
+        Returns
+        -------
+        Function that calculate the angle value from a simlation snap shot.
         Look at `pysages.collective_variables.angles.angle` for details.
         """
         return angle
 
 
 def angle(pos1, pos2, pos3):
-    """
-    Returns the angle defined by three points in space
-    (around the one in the middle).
+    """Function to calculate angle between 3 points.
 
-    Takes 3 positions in space and calculates the angle between them:
+    Takes 3 positions in space and calculates the angle between them.
 
     :math:`\\vec{q} = \\vec{p}_1 - \\vec{p}_2`
 
@@ -38,6 +42,19 @@ def angle(pos1, pos2, pos3):
 
     :math:`\\theta = \\arctan_2(|\\vec{q} \\times \\vec{r}|, \\vec{q} \\cdot \\vec{r})`
 
+    Parameters
+    ----------
+    pos1: array
+       :math:`\\vec{p}_1` 3D vector in space
+    pos1: array
+       :math:`\\vec{p}_2` 3D vector in space
+    pos1: array
+       :math:`\\vec{p}_3` 3D vector in space
+
+    Returns
+    -------
+    float
+       :math:`\\theta`
     """
     qvec = pos1 - pos2
     rvec = pos3 - pos2
@@ -52,6 +69,8 @@ class DihedralAngle(FourPointCV):
     @property
     def function(self):
         """
+        Returns
+        -------
         Returns the function that calculate the dihedral angle value from a simlation snap shot.
         Look at `pysages.collective_variables.angles.dihedral_angle` for details.
         """
@@ -60,19 +79,32 @@ class DihedralAngle(FourPointCV):
 
 def dihedral_angle(pos1, pos2, pos3, pos4):
     """
-    Returns the angle defined by four points in space
-    (around the two in the middle).
+    Calculate dihedral angle between 4 points in space.
 
-    Takes 4 positions in space and calculates the dihedral angle:
+    Takes 4 positions in space and calculates the dihedral angle.
 
     :math:`\\vec{q} = \\vec{p}_3 - \\vec{p}_2`
 
-    :math:`\\vec{r} = (\\vec{p}_2  - \\vec{p}_1)\\times \\vec{q} `
+    :math:`\\vec{r} = (\\vec(p)_2 - \\vec{p}_1) \\times \\vec{q}`
 
-    :math:`\\vec{s} =  \\vec{q}\\times(\\vec{p}_4  - \\vec{p}_3)`
+    :math:`\\vec{s} =  \\vec{q} \\times ( \\vec{p}_4  - \\vec{p}_3 )`
 
     :math:`\\theta = \\arctan_2( (\\vec{r} \\times \\vec{s}) \\cdot \\vec{q}, |\\vec{q}| \\vec{r} \\cdot \\vec{s})`
 
+    Parameters
+    ----------
+    pos1: array
+       :math:`\\vec{p}_1` 3D vector in space
+    pos2: array
+       :math:`\\vec{p}_2` 3D vector in space
+    pos3: array
+       :math:`\\vec{p}_3` 3D vector in space
+    pos4: array
+       :math:`\\vec{p}_4` 3D vector in space
+    Returns
+    -------
+    float
+       :math:`\\theta`
     """
     qvec = pos3 - pos2
     rvec = np.cross(pos2 - pos1, qvec)

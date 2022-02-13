@@ -1,5 +1,5 @@
-pysages.collective_variables.angles
------------------------------------
+Angles as collective variables
+------------------------------
 
 .. rubric:: Overview
 
@@ -7,7 +7,6 @@ pysages.collective_variables.angles
 
    pysages.collective_variables.angles.Angle
    pysages.collective_variables.angles.DihedralAngle
-
 
 .. rubric:: Details
 
