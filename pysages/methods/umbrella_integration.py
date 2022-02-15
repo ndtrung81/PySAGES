@@ -40,9 +40,9 @@ def run_umbrella_sampling(sampler_args, context_generator, context_args, center,
         wrapped_context.run(timesteps)
 
     mean = callback.get_means()
-    nabla_A = free_energy_gradient(sampler.kspring, mean, center)
+    nabla_A = free_energy_gradient(sampler.kspring, mean, sampler.center)
 
-    return dict(kspring=kspring, center=center, histogram=callback, histogram_means=mean, nabla_A=nabla_A)
+    return dict(kspring=kspring, center=sampler.center, histogram=callback, histogram_means=mean, nabla_A=nabla_A)
 
 class UmbrellaIntegration(HarmonicBias):
     def __init__(self, cvs, *args, **kwargs):
@@ -120,13 +120,6 @@ class UmbrellaIntegration(HarmonicBias):
             for future in futures: 
                 for key,val in future.result().items():
                     result[key].append(val)
-
-        # for rep in range(Nreplica):
-            # context_args["replica_num"] = rep
-
-            # results_single = run_umbrella_sampling(self, context_generator, context_args, centers[rep], ksprings[rep], hist_periods[rep], hist_offsets[rep], timesteps[rep])
-            # for key,val in results_single.items():
-                # result[key].append(val)
 
         # Discrete forward integration of the free-energy
         result["A"].append(0)
