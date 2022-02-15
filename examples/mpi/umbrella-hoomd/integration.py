@@ -1,5 +1,4 @@
 import os
-os.environ['CUDA_VISIBLE_DEVICES']= str(int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK']) % 4)
 from mpi4py import MPI
 
 import sys
@@ -15,14 +14,10 @@ import pysages
 from pysages.collective_variables import Component
 from pysages.methods import UmbrellaIntegration
 
-
 param1 = {"A": 0.5, "w": 0.2, "p": 2}
 
 def generate_context(**kwargs):
-    comm_world = MPI.COMM_WORLD
-    comm_self = MPI.COMM_SELF
-    rank = comm_world.Get_rank()
-    hoomd.context.initialize(mpi_comm=comm_self)
+    hoomd.context.initialize(mpi_comm=MPI.COMM_SELF)
 
     context = hoomd.context.SimulationContext()
     with context:

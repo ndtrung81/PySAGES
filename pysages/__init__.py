@@ -15,6 +15,16 @@ if not ("XLA_PYTHON_CLIENT_PREALLOCATE" in os.environ
     # simulation memory footprints
     os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 
+# TODO: detect local number of GPUs per node (currently assumes 4)
+try:
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(int(os.environ['OMPI_COMM_WORLD_LOCAL_RANK']) % 4)
+except KeyError:
+    try:
+        os.environ['CUDA_VISIBLE_DEVICES'] = str(int(os.environ['MV2_COMM_WORLD_LOCAL_RANK']) % 4)
+    except KeyError:
+        # raise EnvironmentError("A valid MPI library was not found")
+        pass
+
 from ._version import version as __version__
 from ._version import version_tuple
 
