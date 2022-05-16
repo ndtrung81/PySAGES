@@ -3,7 +3,7 @@ name: CI-runner
 on:
   push:
     branches:
-      - main
+      - github-runner
     paths-ignore:
       - 'README.md'
   pull_request:
