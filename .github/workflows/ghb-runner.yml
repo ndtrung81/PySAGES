@@ -16,7 +16,6 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          conda activate pysages
           pip install jaxlib pytest matplotlib
 
       - name: Install pysages
