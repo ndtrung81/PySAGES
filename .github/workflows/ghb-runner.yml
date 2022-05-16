@@ -27,7 +27,7 @@ jobs:
 
       - name: Run tests
         run: |
-          echo "Will run: srun --account=rcc-staff --reservation=gpu_test --partition=gpu -n1 pytest"
+          echo "Will run on the login node: srun --account=rcc-staff --reservation=gpu_test --partition=gpu -n1 pytest"
 
 
 
