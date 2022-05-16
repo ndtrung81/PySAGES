@@ -6,26 +6,16 @@ on:
       - github-runner
     paths-ignore:
       - 'README.md'
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
 
 jobs:
   test:
     runs-on: self-hosted
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-20.04, macos-latest]
-        python-version: [3.7, 3.9]
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.x'
 
       - name: Install python dependencies
         run: |
