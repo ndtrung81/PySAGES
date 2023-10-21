@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [linux]
-        python-version: [3.7]
+        python-version: [3.8.16]
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }} on ${{ matrix.os }}
