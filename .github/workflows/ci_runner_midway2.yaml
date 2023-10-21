@@ -3,6 +3,7 @@ name: CI-runner-midway2
 on:
   push:
     branches:
+      - github_ci
       - main
       - trunk-merge/**
     paths-ignore:
